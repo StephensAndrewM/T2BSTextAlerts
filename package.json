@@ -1,0 +1,24 @@
+{
+  "name": "T2BSTextAlerts",
+  "version": "0.0.1",
+  "description": "T2BSTextAlerts ==============",
+  "main": "web.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andrewmediaprod/T2BSTextAlerts.git"
+  },
+  "author": "Andrew Stephens",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/andrewmediaprod/T2BSTextAlerts/issues"
+  },
+  "dependencies": {
+    "express": "~4.10.6",
+    "mongodb": "~1.4.26",
+    "twilio": "~1.10.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
