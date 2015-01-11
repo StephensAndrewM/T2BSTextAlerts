@@ -1,10 +1,17 @@
 var express = require('express'),
 	http = require("http")
 var app = express();
+var mongoose = require('mongoose');
+var bodyParser = require('body-parser')
 
 // Handle Default Route for Static Files
 app.use("/", express.static(__dirname+"/static"));
 
+// Init Body Parser
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true })); 
+app.use(express.json());
+app.use(express.urlencoded());
 
 
 /*******************
@@ -33,18 +40,14 @@ var MessageRecord = mongoose.model("MessageRecord", messageSchema);
 var SuggestionRecord = mongoose.model("SuggestionRecord", suggestionSchema);
 
 // Mongo Initialiation
-var mongoUri = process.env.MONGOLAB_URI ||
-	process.env.MONGOHQ_URL ||
-	'mongodb://localhost/'+DB_NAME;
-var mongo = require('mongodb');
+var db = mongoose.connection;
 
-// Connect to DB
-var db; var dbError;
-mongo.Db.connect(mongoUri, function (error, databaseConnection) {
-	if (error) { dbError = error; }
-	else { db = databaseConnection; }
+db.on('error', console.error);
+db.once('open', function() {
+  // Create your schemas and models here.
 });
 
+mongoose.connect('mongodb://localhost/'+DB_NAME);
 
 
 /******************
@@ -52,15 +55,15 @@ mongo.Db.connect(mongoUri, function (error, databaseConnection) {
 ******************/
 
 // Populate Front-End with Recent Suggestions
-app.get('/suggestions', function(req, res)) {
+app.get('/suggestions', function(req, res) {
 
 	// Get Recent Suggestions from DB
 
-}
+});
 
 
 // Populates Admin Area with Stored Data
-app.get('/admindata', function(req, res)) {
+app.get('/admindata', function(req, res) {
 
 	// Check if User is Logged In
 
@@ -70,10 +73,10 @@ app.get('/admindata', function(req, res)) {
 	 
 	// Get Suggestions from DB
 
-}
+});
 
 // Submission of Suggestion on Front-End
-app.post('/suggest', function(req, res)) {
+app.post('/suggest', function(req, res) {
 
 	// Get Required Post Data
 
@@ -81,7 +84,7 @@ app.post('/suggest', function(req, res)) {
 	
 	// Insert into DB
 
-}
+});
 
 // Submission of Phone Number Form on Front-End
 app.post('/signup', function(req, res) {
@@ -93,7 +96,7 @@ app.post('/signup', function(req, res) {
 });
 
 // Submission of Message Send Form on Admin Area
-app.post('/send', function(req, res)) {
+app.post('/send', function(req, res) {
 
 	// Check Authentication
 	
@@ -103,6 +106,6 @@ app.post('/send', function(req, res)) {
 
 	// Insert into DB
 
-}
+});
 
 var server = app.listen(3000);
