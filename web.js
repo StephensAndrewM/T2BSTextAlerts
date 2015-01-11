@@ -10,8 +10,6 @@ app.use("/", express.static(__dirname+"/static"));
 // Init Body Parser
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); 
-app.use(express.json());
-app.use(express.urlencoded());
 
 
 /*******************
