@@ -2,7 +2,7 @@ var express = require('express'),
 	http = require("http")
 var app = express();
 var mongoose = require('mongoose');
-var bodyParser = require('body-parser')
+var bodyParser = require('body-parser');
 
 // Handle Default Route for Static Files
 app.use("/", express.static(__dirname+"/static"));
@@ -10,7 +10,6 @@ app.use("/", express.static(__dirname+"/static"));
 // Init Body Parser
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); 
-
 
 /*******************
   Database Config
@@ -39,12 +38,7 @@ var SuggestionRecord = mongoose.model("SuggestionRecord", suggestionSchema);
 
 // Mongo Initialiation
 var db = mongoose.connection;
-
 db.on('error', console.error);
-db.once('open', function() {
-  // Create your schemas and models here.
-});
-
 mongoose.connect('mongodb://localhost/'+DB_NAME);
 
 
@@ -56,6 +50,10 @@ mongoose.connect('mongodb://localhost/'+DB_NAME);
 app.get('/suggestions', function(req, res) {
 
 	// Get Recent Suggestions from DB
+	SuggestionRecord.find(function(err, result) {
+		if (err) { console.log(err); res.send("NO: 1"); return; }
+		res.send(JSON.stringify(result));
+	});
 
 });
 
@@ -77,19 +75,67 @@ app.get('/admindata', function(req, res) {
 app.post('/suggest', function(req, res) {
 
 	// Get Required Post Data
+	var suggestion = req.body.suggestion;
+	if (!suggestion) { res.send("NO: 1"); return; }
 
 	// Check if Duplicate (Not Complex)
-	
-	// Insert into DB
+	SuggestionRecord.count({
+		name: suggestion
+	}, function(err, count) {
+
+		if (err) { console.log(err); res.send("NO: 2"); return; }
+
+		// If Record Exists, Don't Re-Add
+		if (count > 0) { res.send("NO: 3"); return; }
+
+		// Insert into DB
+		var record = new SuggestionRecord({
+			name: suggestion,
+			date: Date.now()
+		});
+		record.save(function(err, r) {
+			if (err) { console.log(err); res.send("NO: 2"); }
+			else { res.send("OK"); }
+		});
+
+	})
 
 });
 
 // Submission of Phone Number Form on Front-End
 app.post('/signup', function(req, res) {
+
+	// Get Required Post Data
+	var name = req.body.name;
+	if (!name) { res.send("NO: 1"); return; }
+	var number = req.body.number;
+	if (!number) { res.send("NO: 2"); return; }
 	
-	// Check if Duplicate Phone Number
-	
-	// Insert into DB
+	// Check if Duplicate Phone Number, then Insert
+	PhoneRecord.count({
+		$or: [
+			{ name: name }, 
+			{ phone: number}
+		]
+	}, function(err, count) {
+
+		if (err) { console.log(err); res.send("NO: 3"); return; }
+
+		// If Record Exists, Don't Re-Add
+		if (count > 0) { res.send("NO: 4"); return; }
+
+		// Insert into DB
+		var record = new PhoneRecord({
+			name: name,
+			phone: number,
+			date: Date.now()
+		});
+		record.save(function(err, r) {
+			if (err) { console.log(err); res.send("NO: 5"); }
+			else { res.send("OK"); }
+		});
+
+	})
 
 });
 
