@@ -51,13 +51,38 @@ mongoose.connect('mongodb://localhost/'+DB_NAME);
    Custom Routes
 ******************/
 
+var makeError = function(msg) {
+	var result = { error:msg };
+	return JSON.stringify(result);
+}
+
+var Error = {
+	general: function(res, msg) {
+		result = { error:msg };
+		Error.send(res, result);
+	},
+	missing: function(res, field) {
+		result = { error:"Required field not provided.", name:field };
+		Error.send(res, result);
+	},
+	db: function(res) {
+		Error.general(res, "A database error occurred.");
+	}
+	send: function(res, json) {
+		res.send(JSON.stringify(json));
+	}
+}
+
 // Populate Front-End with Recent Suggestions
 app.get('/suggestions', function(req, res) {
 
 	// Get Recent Suggestions from DB
 	SuggestionRecord.find({}, function(err, result) {
-		if (err) { console.log(err); res.send("NO: 1"); return; }
-		res.send(JSON.stringify(result));
+		if (err) { 
+			Error.general(res, "Could not retrieve suggestions.");
+		} else {
+			res.send(JSON.stringify(result));
+		}
 	});
 
 });
@@ -104,17 +129,26 @@ app.post('/suggest', function(req, res) {
 
 	// Get Required Post Data
 	var suggestion = req.body.suggestion;
-	if (!suggestion) { res.send("NO: 1"); return; }
+	if (!suggestion) { 
+		Error.missing(res, "suggestion");
+		return; 
+	}
 
 	// Check if Duplicate (Not Complex)
 	SuggestionRecord.count({
 		name: suggestion
 	}, function(err, count) {
 
-		if (err) { console.log(err); res.send("NO: 2"); return; }
+		if (err) { 
+			Error.db(res);
+			return;
+		}
 
 		// If Record Exists, Don't Re-Add
-		if (count > 0) { res.send("NO: 3"); return; }
+		if (count > 0) { 
+			Error.general("This has already been suggested.");
+			return;
+		}
 
 		// Insert into DB
 		var record = new SuggestionRecord({
@@ -122,7 +156,7 @@ app.post('/suggest', function(req, res) {
 			date: Date.now()
 		});
 		record.save(function(err, r) {
-			if (err) { console.log(err); res.send("NO: 2"); }
+			if (err) { Error.db(res); }
 			else { res.send("OK"); }
 		});
 
@@ -135,9 +169,15 @@ app.post('/signup', function(req, res) {
 
 	// Get Required Post Data
 	var name = req.body.name;
-	if (!name) { res.send("NO: 1"); return; }
+	if (!name) { 
+		Error.missing(res, "name");
+		return; 
+	}
 	var number = req.body.number;
-	if (!number) { res.send("NO: 2"); return; }
+	if (!number) { 
+		Error.missing(res, "number");
+		return; 
+	}
 
 	// Put Phone Number in Required Format
 	// TODO
@@ -150,10 +190,16 @@ app.post('/signup', function(req, res) {
 		]
 	}, function(err, count) {
 
-		if (err) { console.log(err); res.send("NO: 3"); return; }
+		if (err) { 
+			Error.db(res);
+			return; 
+		}
 
 		// If Record Exists, Don't Re-Add
-		if (count > 0) { res.send("NO: 4"); return; }
+		if (count > 0) { 
+			Error.general("This person is already signed up for text alerts.");
+			return;
+		}
 
 		// Insert into DB
 		var record = new PhoneRecord({
@@ -162,7 +208,7 @@ app.post('/signup', function(req, res) {
 			date: Date.now()
 		});
 		record.save(function(err, r) {
-			if (err) { console.log(err); res.send("NO: 5"); }
+			if (err) { Error.db(res); }
 			else { res.send("OK"); }
 		});
 
@@ -178,7 +224,7 @@ app.post('/send', function(req, res) {
 	
 	// Check Required Fields
 	var message = req.body.message;
-	if (!message) { res.send("NO: 1"); return; }
+	if (!message) { Error.missing("message"); return; }
 
 	// Count Interactions for End of Request
 	var resultSuccess = true;
@@ -191,7 +237,7 @@ app.post('/send', function(req, res) {
 		var endCheck = function() {
 			if (resultCount == dbResult.length) {
 				if (resultSuccess) { res.send("OK"); } 
-				else { res.send("NO: 3"); }
+				else { Error.general("An error occurred while sending messages."); }
 			}
 		}
 
@@ -218,7 +264,7 @@ app.post('/send', function(req, res) {
 						date: Date.now()
 					});
 					record.save(function(err, r) {
-						if (err) { console.log(err); resultSuccess = false; }
+						if (err) { resultSuccess = false; }
 						endCheck();
 					});
 
