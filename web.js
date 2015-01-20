@@ -57,7 +57,7 @@ var Error = {
 		Error.send(res, result);
 	},
 	missing: function(res, field) {
-		result = { error:"Required field not provided.", name:field };
+		result = { error:"Required field not provided: "+field, field:field };
 		Error.send(res, result);
 	},
 	db: function(res) {
