@@ -1,8 +1,13 @@
 var express = require('express'),
 	http = require("http")
 var app = express();
-var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
+
+var mongoose = require('mongoose');
+
+var keys = require('./keys')
+var twilio = require('twilio')(keys.twilio_account_sid, keys.twilio_auth_token);
+
 
 // Handle Default Route for Static Files
 app.use("/", express.static(__dirname+"/static"));
@@ -50,7 +55,7 @@ mongoose.connect('mongodb://localhost/'+DB_NAME);
 app.get('/suggestions', function(req, res) {
 
 	// Get Recent Suggestions from DB
-	SuggestionRecord.find(function(err, result) {
+	SuggestionRecord.find({}, function(err, result) {
 		if (err) { console.log(err); res.send("NO: 1"); return; }
 		res.send(JSON.stringify(result));
 	});
@@ -61,13 +66,36 @@ app.get('/suggestions', function(req, res) {
 // Populates Admin Area with Stored Data
 app.get('/admindata', function(req, res) {
 
-	// Check if User is Logged In
+	// Aggregate Combined Request
+	var allResponse = {
+		messages: false,
+		users: false,
+		suggestions: false
+	}
+
+	var dbHandler = function(slot) {
+		return function(err, result) {
+			allResponse[slot] = result;
+
+			if (allResponse.messages !== false &&
+				allResponse.users !== false &&
+				allResponse.suggestions !== false) {
+				res.send(JSON.stringify(allResponse));
+			}
+		}
+	}
+
+	// Authenticate
+	// TODO
 
 	// Get Recent Messages from DB
+	MessageRecord.find({}, dbHandler("messages"));
 	
 	// Get Registered Users from DB
+	PhoneRecord.find({}, dbHandler("users"));
 	 
 	// Get Suggestions from DB
+	SuggestionRecord.find({}, dbHandler("suggestions"));
 
 });
 
@@ -110,6 +138,9 @@ app.post('/signup', function(req, res) {
 	if (!name) { res.send("NO: 1"); return; }
 	var number = req.body.number;
 	if (!number) { res.send("NO: 2"); return; }
+
+	// Put Phone Number in Required Format
+	// TODO
 	
 	// Check if Duplicate Phone Number, then Insert
 	PhoneRecord.count({
@@ -142,13 +173,77 @@ app.post('/signup', function(req, res) {
 // Submission of Message Send Form on Admin Area
 app.post('/send', function(req, res) {
 
-	// Check Authentication
+	// Authenticate
+	// TODO
 	
 	// Check Required Fields
+	var message = req.body.message;
+	if (!message) { res.send("NO: 1"); return; }
 
-	// Call Twilio Library to Send
+	// Count Interactions for End of Request
+	var resultSuccess = true;
+	var resultCount = 0;
 
-	// Insert into DB
+	PhoneRecord.find({}, function(err, dbResult) {
+
+		// Checks How Many Requests Have Happened
+		// Send Response if We Have Hit the Right Number
+		var endCheck = function() {
+			if (resultCount == dbResult.length) {
+				if (resultSuccess) { res.send("OK"); } 
+				else { res.send("NO: 3"); }
+			}
+		}
+
+		for(var i in dbResult) {
+			var row = dbResult[i];
+
+			// Send One Text for Every Number in Database
+			twilio.sendMessage({
+
+			    to: row.phone,
+			    from: '+16176074800',
+			    body: message
+
+			}, function(err, responseData) {
+
+				// Increment Result Count Either Way
+				resultCount++;
+
+			    if (!err) {
+
+			        // Insert into DB
+					var record = new MessageRecord({
+						msg: message,
+						date: Date.now()
+					});
+					record.save(function(err, r) {
+						if (err) { console.log(err); resultSuccess = false; }
+						endCheck();
+					});
+
+			    } else {
+
+			    	// Something Went Wrong; Stop Everything
+			    	resultSuccess = false;
+			    	endCheck();
+			    	return;
+
+			    }
+
+
+			});
+
+		}
+
+	})
+
+});
+
+
+app.post('/response', function(req, res) {
+
+
 
 });
 
