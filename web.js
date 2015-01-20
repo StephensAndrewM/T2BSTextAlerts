@@ -51,11 +51,6 @@ mongoose.connect('mongodb://localhost/'+DB_NAME);
    Custom Routes
 ******************/
 
-var makeError = function(msg) {
-	var result = { error:msg };
-	return JSON.stringify(result);
-}
-
 var Error = {
 	general: function(res, msg) {
 		result = { error:msg };
@@ -67,7 +62,7 @@ var Error = {
 	},
 	db: function(res) {
 		Error.general(res, "A database error occurred.");
-	}
+	},
 	send: function(res, json) {
 		res.send(JSON.stringify(json));
 	}
@@ -157,7 +152,7 @@ app.post('/suggest', function(req, res) {
 		});
 		record.save(function(err, r) {
 			if (err) { Error.db(res); }
-			else { res.send("OK"); }
+			else { res.send("{ \"success\":true }"); }
 		});
 
 	})
@@ -209,7 +204,7 @@ app.post('/signup', function(req, res) {
 		});
 		record.save(function(err, r) {
 			if (err) { Error.db(res); }
-			else { res.send("OK"); }
+			else { res.send("{ \"success\":true }"); }
 		});
 
 	})
@@ -236,7 +231,7 @@ app.post('/send', function(req, res) {
 		// Send Response if We Have Hit the Right Number
 		var endCheck = function() {
 			if (resultCount == dbResult.length) {
-				if (resultSuccess) { res.send("OK"); } 
+				if (resultSuccess) { res.send("{ \"success\":true }"); } 
 				else { Error.general("An error occurred while sending messages."); }
 			}
 		}
