@@ -62,21 +62,20 @@ textarea {
    ========================================================================== */
 
 body {
-    background: url(../img/red-curtain-background.jpg) no-repeat #101010;
+    background: #101010;
     font-family:'Open Sans', Arial, sans-serif;
 }
 
+.mobile-logo {
+    max-width: 100%;
+}
+
 .box {
-    width:35%;
-    padding: 10px 10px;
-    display: block;
-    background: rgba(0,0,0,0.8);
-    text-align: center;
-    color:#ffffff;
-    position: absolute;
-    bottom:0;
     transition: 0.3s all ease;
     box-sizing: border-box;
+    color:#ffffff;
+    text-align: center;
+    padding:0 20px;
 
     h2 {
         font-weight:bold;
@@ -90,32 +89,14 @@ body {
     }
 
     .box-content {
-        // transition: 0.3s all ease;
-        // height:100px;
-        // overflow: hidden;
         padding: 0;
         margin: 0;
-        // display: none;
     }
 
 }
 
 .box-left { left:10%; }
 .box-right { right:10%; }
-
-.box-active {
-
-    // padding: 50px 10px;
-
-    h2 {
-        // margin:1em 0;
-    }
-
-    .box-content {
-        // height: auto;
-    }
-    
-}
 
 
 
@@ -184,9 +165,32 @@ body {
    Media Queries
    ========================================================================== */
 
-@media only screen and (min-width: 35em) {
+@media only screen and (min-width:768px) {
+
+    body {
+        background: url(../img/red-curtain-background.jpg) no-repeat #101010;
+    }
+
+    .mobile-logo { display: none; }
+
+    .box {
+        width:35%;
+        padding: 10px 10px;
+        display: block;
+        background: rgba(0,0,0,0.8);
+        position: absolute;
+        bottom:0;
+        transition: 0.3s all ease;
+        box-sizing: border-box;
+    }
+
+    .box-left { left:10%; }
+    .box-right { right:10%; }
 
 }
+
+
+
 
 @media print,
        (-o-min-device-pixel-ratio: 5/4),

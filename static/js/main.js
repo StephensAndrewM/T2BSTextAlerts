@@ -1,10 +1,16 @@
 $(document).ready(function() {
 
-	$('.box-content').hide();
+	console.log($(window).width())
 
-	$('.box h2').click(function() {
-		$(this).parent().find('.box-content').slideToggle(500);
-	})
+	if ($(window).width() >= 768) {
+
+		$('.box-content').hide();
+
+		$('.box h2').click(function() {
+			$(this).parent().find('.box-content').slideToggle(500);
+		})
+
+	}
 
 	var formHandleFunction = function($form) {
 		return function(result) {
